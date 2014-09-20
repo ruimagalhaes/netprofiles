@@ -1,0 +1,2 @@
+include ':app', ':swipelistview'
+project(':swipelistview').projectDir = new File('android-swipelistview-master/swipelistview')

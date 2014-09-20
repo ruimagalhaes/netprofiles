@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Your Networks</string>
+    <string name="add_network">Add</string>
+    <string name="add_new">Add Network</string>
+
+    <string name="search_networks">Search Networks</string>
+
+    <string name="dialog_title">Choose the ring mode</string>
+    <string-array name="ring_modes">
+        <item>Silent</item>
+        <item>Vibration</item>
+        <item>Normal</item>
+        <item>Do nothing</item>
+    </string-array>
+
+</resources>
