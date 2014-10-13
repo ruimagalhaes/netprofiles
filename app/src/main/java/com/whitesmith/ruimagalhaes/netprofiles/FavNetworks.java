@@ -1,38 +1,24 @@
 package com.whitesmith.ruimagalhaes.netprofiles;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Spannable;
-import android.text.style.BackgroundColorSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.fortysevendeg.swipelistview.BaseSwipeListViewListener;
+import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import com.fortysevendeg.swipelistview.SwipeListView;
-import com.fortysevendeg.swipelistview.SwipeListViewListener;
-import com.fortysevendeg.swipelistview.SwipeListViewTouchListener;
-
+import android.widget.TextView;
+import com.nhaarman.listviewanimations.ArrayAdapter;
+import com.nhaarman.listviewanimations.appearance.AnimationAdapter;
+import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-
 
 public class FavNetworks extends Activity {
 
@@ -40,11 +26,12 @@ public class FavNetworks extends Activity {
     public static final String NETWORK = "network";
     static final String NETWORK_SET = "networl_set";
     static final int PICK_NETWORK_REQUEST = 200;
+    public static final String NETWORK_ARRAY = "NETWORK_ARRAY";
 
-    //private ListView network_list;
+    private AnimationAdapter mAnimAdapter;
     private SwipeListView network_list;
     private List<String> your_networks_array;
-    private YourNetworksAdapter yourNetworksAdapter;
+    private BaseAdapter yourNetworksAdapter;
 
     private SharedPreferences settings;
 
@@ -52,57 +39,38 @@ public class FavNetworks extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fav_networks);
+        getActionBar().setIcon(R.drawable.action_bar_icon);
+        getActionBar().setDisplayShowCustomEnabled(true);
+        getActionBar().setDisplayShowTitleEnabled(false);
+        LayoutInflater inflator = LayoutInflater.from(this);
+        View v = inflator.inflate(R.layout.action_bar_custom, null);
+        ((TextView)v.findViewById(R.id.title)).setText(getResources().getString(R.string.your_profiles));
+        getActionBar().setCustomView(v);
 
         settings = getSharedPreferences(PREFS_NAME, 0);
 
         your_networks_array = new ArrayList<String>(settings.getStringSet(NETWORK_SET, new HashSet<String>()));
-
         network_list = (SwipeListView) findViewById(R.id.my_networks_list);
-
-
-        network_list.setSwipeListViewListener(new BaseSwipeListViewListener() {
-                                     @Override
-                                     public void onClickFrontView(int position) {
-                                         Dialog ringDialog = getRingDialog(yourNetworksAdapter.getNetwork(position));
-                                         ringDialog.show();
-                                     }
-                                     @Override
-                                        public void onDismiss(int[] reverseSortedPositions) {
-                                            your_networks_array.remove(reverseSortedPositions[0]);
-                                            updateList(your_networks_array);
-                                        }
-                                   });
-
-
         yourNetworksAdapter = new YourNetworksAdapter(this);
-        network_list.setAdapter(yourNetworksAdapter);
-        updateNetworks();
+        mAnimAdapter = new SwingBottomInAnimationAdapter(yourNetworksAdapter);
+        mAnimAdapter.setAbsListView(network_list);
+        network_list.setAdapter(mAnimAdapter);
+        setBackgroundListView();
+
     }
 
-    private void updateNetworks() {
-        yourNetworksAdapter.notifyDataSetChanged();
+    public void openNetworkPicker(View view) {
+        Intent i = new Intent(this,AllWiFiNetworks.class);
+
+        Bundle b=new Bundle();
+        String[] currentNetworksArray = your_networks_array.toArray(new String[your_networks_array.size()]);
+
+        b.putStringArray(NETWORK_ARRAY, currentNetworksArray);
+        i.putExtras(b);
+
+        startActivityForResult(i, PICK_NETWORK_REQUEST);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.fav_networks, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_add) {
-            Intent i = new Intent(this,AllWiFiNetworks.class);
-            startActivityForResult(i, PICK_NETWORK_REQUEST);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -120,29 +88,39 @@ public class FavNetworks extends Activity {
         Set<String> set = new HashSet<String>(networks);
         editor.putStringSet(NETWORK_SET, set);
         editor.commit();
-        updateNetworks();
+        yourNetworksAdapter.notifyDataSetChanged();
+        setBackgroundListView();
+    }
+
+    private void setBackgroundListView() {
+        if(yourNetworksAdapter.getCount() == 0)
+            findViewById(R.id.no_network_view).setVisibility(View.VISIBLE);
+        else
+            findViewById(R.id.no_network_view).setVisibility(View.GONE);
     }
 
     public class YourNetworksAdapter extends ArrayAdapter<String> {
-        private final Context context;
 
-        public YourNetworksAdapter(Context context) {
-            super(context, R.layout.row_layout);
-            this.context = context;
+        private final Context mContext;
+
+        public YourNetworksAdapter(final Context context) {
+            mContext = context;
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, final View convertView, final ViewGroup parent) {
+            FrameLayout view = (FrameLayout) convertView;
+            if (view == null) {
+                view = (FrameLayout) LayoutInflater.from(mContext).inflate(R.layout.row_my_networks_layout, parent, false);
+            }
 
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View rowView = inflater.inflate(R.layout.row_my_networks_layout, parent, false);
-            TextView label = (TextView) rowView.findViewById(R.id.label);
-            TextView state = (TextView) rowView.findViewById(R.id.state);
+            TextView label = (TextView) view.findViewById(R.id.label);
+            TextView state = (TextView) view.findViewById(R.id.state);
             String [] ringModes = getResources().getStringArray(R.array.ring_modes);
             int mode = settings.getInt(your_networks_array.get(position), -1);
             switch (mode) {
                 case -1:
-                    state.setText("Tap to set ring mode");
+                    state.setText("Swipe to set ringer mode");
                     break;
                 case 0:
                     state.setText(ringModes[0]);
@@ -160,9 +138,51 @@ public class FavNetworks extends Activity {
                     break;
             }
 
-            label.setText(your_networks_array.get(position));
+            final String network_name = your_networks_array.get(position).substring(1,your_networks_array.get(position).length()-1);
+            label.setText(network_name);
 
-            return rowView;
+            View.OnClickListener option_listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    final String networkSSID = your_networks_array.get(position);
+                    SharedPreferences.Editor editor = settings.edit();
+                    switch (view.getId()){
+
+                        case R.id.silence_option:
+                            editor.putInt(networkSSID, 0);
+                            editor.commit();
+                            yourNetworksAdapter.notifyDataSetChanged();
+                            network_list.closeAnimate(position);
+                            break;
+                        case R.id.vibrate_option:
+                            editor.putInt(networkSSID, 1);
+                            editor.commit();
+                            yourNetworksAdapter.notifyDataSetChanged();
+                            network_list.closeAnimate(position);
+                            break;
+                        case R.id.ringer_option:
+                            editor.putInt(networkSSID, 2);
+                            editor.commit();
+                            yourNetworksAdapter.notifyDataSetChanged();
+                            network_list.closeAnimate(position);
+                            break;
+                        case R.id.trash_option:
+                           // network_list.dismiss(position);
+                            network_list.closeAnimate(position);
+                            your_networks_array.remove(position);
+                            updateList(your_networks_array);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+
+            view.findViewById(R.id.vibrate_option).setOnClickListener(option_listener);
+            view.findViewById(R.id.silence_option).setOnClickListener(option_listener);
+            view.findViewById(R.id.ringer_option).setOnClickListener(option_listener);
+            view.findViewById(R.id.trash_option).setOnClickListener(option_listener);
+            return view;
         }
 
         @Override
@@ -175,26 +195,4 @@ public class FavNetworks extends Activity {
         }
     }
 
-    private Dialog getRingDialog(String network) {
-        final String networkSSID = network;
-        int mode = settings.getInt(networkSSID, -1);
-        //if(mode == -1) mode = 3;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Settings for "+networkSSID)
-                .setSingleChoiceItems(R.array.ring_modes, mode,  new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int position) {
-                        SharedPreferences.Editor editor = settings.edit();
-                        editor.putInt(networkSSID, position);
-                        editor.commit();
-                        dialog.dismiss();
-                        yourNetworksAdapter.notifyDataSetChanged();
-                        /*if(-1 < position && position < 3)
-                            Toast.makeText(getBaseContext(), "All set!", Toast.LENGTH_SHORT).show();*/
-                    }
-                });
-
-        return builder.create();
-    }
 }

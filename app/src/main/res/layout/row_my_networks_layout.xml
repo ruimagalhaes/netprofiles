@@ -1,24 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp">
+    android:layout_height="60dp"
+    android:gravity="center_vertical">
 
     <LinearLayout
         android:id="@+id/back"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
+        android:background="@color/red"
         android:gravity="center_vertical">
-
+        <FrameLayout
+            android:id="@+id/vibrate_option"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:src="@drawable/vibrate"
+                android:layout_gravity="center" />
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/silence_option"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:src="@drawable/silence"
+                android:layout_gravity="center" />
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/ringer_option"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:src="@drawable/ringer"
+                android:layout_gravity="center" />
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/trash_option"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:src="@drawable/trash"
+                android:layout_gravity="center" />
+        </FrameLayout>
 
     </LinearLayout>
-
 
     <LinearLayout
         android:id="@+id/front"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
+        android:background="@color/white"
         android:gravity="center_vertical">
         <TextView
             android:id="@+id/label"
@@ -26,14 +75,20 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp" />
+            android:layout_marginRight="20dp"
+            android:textSize="17sp"
+            android:fontFamily="sans-serif-condensed"/>
 
         <TextView
             android:id="@+id/state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp" />
-
+            android:layout_marginRight="20dp"
+            android:textColor="@color/red"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-condensed"/>
     </LinearLayout>
+
+
 </FrameLayout>

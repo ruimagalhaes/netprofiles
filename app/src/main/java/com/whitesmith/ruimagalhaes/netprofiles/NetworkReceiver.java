@@ -35,15 +35,15 @@ public class NetworkReceiver extends BroadcastReceiver {
                 int mode = settings.getInt(wifiInfo.getSSID(), -1);
                 switch (mode) {
                     case 0:
-                        Toast.makeText(context ,wifiInfo.getSSID() + "  SILENT", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(context ,wifiInfo.getSSID() + "  SILENT", Toast.LENGTH_SHORT).show();
                         manager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
                         break;
                     case 1:
-                        Toast.makeText(context , wifiInfo.getSSID() + "  VIVRATE", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(context , wifiInfo.getSSID() + "  VIVRATE", Toast.LENGTH_SHORT).show();
                         manager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
                         break;
                     case 2:
-                        Toast.makeText(context , wifiInfo.getSSID() + "  NORMAL", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(context , wifiInfo.getSSID() + "  NORMAL", Toast.LENGTH_SHORT).show();
                         manager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
                         break;
                     default:

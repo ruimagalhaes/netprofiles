@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Your Networks</string>
-    <string name="add_network">Add</string>
-    <string name="add_new">Add Network</string>
+    <string name="app_name">Quiet!</string>
+    <string name="your_profiles">Your Profiles</string>
+    <string name="add_network">Add Network</string>
+    <string name="no_networks">Start by choosing a network\nwith the button below</string>
 
     <string name="search_networks">Search Networks</string>
 
@@ -11,7 +12,7 @@
     <string-array name="ring_modes">
         <item>Silent</item>
         <item>Vibration</item>
-        <item>Normal</item>
+        <item>Ringer</item>
         <item>Do nothing</item>
     </string-array>
 

@@ -1,12 +1,8 @@
 package com.whitesmith.ruimagalhaes.netprofiles;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -21,41 +17,59 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.nhaarman.listviewanimations.ArrayAdapter;
+import com.nhaarman.listviewanimations.appearance.AnimationAdapter;
+import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 public class AllWiFiNetworks extends Activity {
-
-
 
     private WifiManager wifi;
     private ListView network_list;
     private List<WifiConfiguration> results;
     private EditText editsearch;
     private NetworkListAdapter networkListAdapter;
+    private AnimationAdapter mAnimAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.all_wifi_networks_layout);
-
-        getActionBar().setTitle(R.string.add_new);
+        getActionBar().setIcon(R.drawable.action_bar_icon);
+        getActionBar().setDisplayShowCustomEnabled(true);
+        getActionBar().setDisplayShowTitleEnabled(false);
+        LayoutInflater inflator = LayoutInflater.from(this);
+        View v = inflator.inflate(R.layout.action_bar_custom, null);
+        ((TextView)v.findViewById(R.id.title)).setText("Add Network");
+        getActionBar().setCustomView(v);
 
         network_list = (ListView) findViewById(R.id.network_list);
 
         wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         wifi.startScan();
         results= wifi.getConfiguredNetworks();
+        List<WifiConfiguration> results_filtered;
         if(results!=null){
-            networkListAdapter = new NetworkListAdapter(this, results);
+            results_filtered = new ArrayList<WifiConfiguration>();
+            Bundle bundle = getIntent().getExtras();
+            if(bundle != null){
+                String[] network_array = bundle.getStringArray(FavNetworks.NETWORK_ARRAY);
+                for (WifiConfiguration network : results) {
+                    if(!Arrays.asList(network_array).contains(network.SSID)) {
+                        results_filtered.add(network);
+                    }
+                }
+            }
+
+            networkListAdapter = new NetworkListAdapter(this, results_filtered);
             network_list.setAdapter(networkListAdapter);
             network_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -67,16 +81,11 @@ public class AllWiFiNetworks extends Activity {
                     finish();
                 }
             });
-            /*network_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
-                    Dialog ringDialog = getRingDialog(networkListAdapter.getNetwork(position));
-                    ringDialog.show();
-                }
+            mAnimAdapter = new SwingBottomInAnimationAdapter(networkListAdapter);
+            mAnimAdapter.setAbsListView(network_list);
+            network_list.setAdapter(mAnimAdapter);
 
-            });*/
         }
 
     }
@@ -87,10 +96,20 @@ public class AllWiFiNetworks extends Activity {
         MenuItem menuItem = menu.findItem(R.id.action_search_networks);
         SearchView searchView = (SearchView) menuItem.getActionView();
 
-        int searchPlateId = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
-        editsearch = (EditText) searchView.findViewById(searchPlateId);
-        editsearch.addTextChangedListener(textWatcher);
-        editsearch.setHint("Network Name");
+        int searchTextId = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
+        editsearch = (EditText) searchView.findViewById(searchTextId);
+        if(editsearch != null){
+            editsearch.addTextChangedListener(textWatcher);
+            editsearch.setHintTextColor(getResources().getColor(R.color.white));
+            editsearch.setHint("Network Name");
+        }
+
+        int searchPlateId = searchView.getContext().getResources().getIdentifier("android:id/search_plate", null, null);
+        View searchPlateView = searchView.findViewById(searchPlateId);
+        if (searchPlateView != null) {
+            searchPlateView.setBackgroundColor(getResources().getColor(R.color.red));
+        }
+
         return super.onCreateOptionsMenu(menu);
 
     }
@@ -118,14 +137,13 @@ public class AllWiFiNetworks extends Activity {
     };
 
     public class NetworkListAdapter extends ArrayAdapter<String> {
-        private final Context context;
+        private final Context mContext;
         private List<WifiConfiguration> networks;
         private List<WifiConfiguration> networks_raw;
         private String searchText;
 
         public NetworkListAdapter(Context context, List<WifiConfiguration> networks) {
-            super(context, R.layout.row_layout);
-            this.context = context;
+            this.mContext = context;
             this.networks = new ArrayList<WifiConfiguration>(networks);
             this.networks_raw = new ArrayList<WifiConfiguration>(networks);
             this.searchText = "";
@@ -134,7 +152,7 @@ public class AllWiFiNetworks extends Activity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View rowView = inflater.inflate(R.layout.row_layout, parent, false);
             TextView label = (TextView) rowView.findViewById(R.id.label);
             String network_ssid = networks.get(position).SSID.substring(1, networks.get(position).SSID.length()-1);
@@ -142,7 +160,7 @@ public class AllWiFiNetworks extends Activity {
             String name = network_ssid.toLowerCase(Locale.getDefault());
             Spannable spanText = Spannable.Factory.getInstance().newSpannable(network_ssid);
             int start = name.indexOf(searchText);
-            spanText.setSpan(new BackgroundColorSpan(context.getResources().getColor(android.R.color.holo_blue_light)),start, start+searchText.length() , Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            spanText.setSpan(new BackgroundColorSpan(mContext.getResources().getColor(R.color.light_red)),start, start+searchText.length() , Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             label.setText(spanText);
 
             return rowView;
@@ -180,31 +198,5 @@ public class AllWiFiNetworks extends Activity {
             return networks.get(position);
         }
     }
-
-    private Dialog getRingDialog(WifiConfiguration config) {
-        final String networkSSID = config.SSID;
-        SharedPreferences settings = getSharedPreferences(FavNetworks.PREFS_NAME, 0);
-        int mode = settings.getInt(networkSSID, -1);
-        if(mode == -1) mode = 3;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Settings for "+networkSSID)
-                .setSingleChoiceItems(R.array.ring_modes, mode,  new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int position) {
-                        SharedPreferences settings = getSharedPreferences(FavNetworks.PREFS_NAME, 0);
-                        SharedPreferences.Editor editor = settings.edit();
-                        editor.putInt(networkSSID, position);
-                        editor.commit();
-                        dialog.dismiss();
-                        if(-1 < position && position < 3)
-                            Toast.makeText(getBaseContext(), "All set!", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        return builder.create();
-    }
-
-
 
 }
